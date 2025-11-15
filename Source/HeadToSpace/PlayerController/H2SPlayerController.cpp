@@ -1,12 +1,12 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 
-#include "HeadToSpacePlayerController.h"
+#include "H2SPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 
-void AHeadToSpacePlayerController::SetupInputComponent()
+void AH2SPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 

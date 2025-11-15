@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 
-#include "Variant_Combat/CombatGameMode.h"
+#include "CombatGameMode.h"
 
 ACombatGameMode::ACombatGameMode()
 {

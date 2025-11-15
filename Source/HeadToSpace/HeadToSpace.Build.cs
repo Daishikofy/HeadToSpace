@@ -24,12 +24,12 @@ public class HeadToSpace : ModuleRules
 
 		PublicIncludePaths.AddRange(new string[] {
 			"HeadToSpace",
-			"HeadToSpace/Variant_Platforming",
-			"HeadToSpace/Variant_Combat",
-			"HeadToSpace/Variant_Combat/AI",
-			"HeadToSpace/Variant_SideScrolling",
-			"HeadToSpace/Variant_SideScrolling/Gameplay",
-			"HeadToSpace/Variant_SideScrolling/AI"
+			"HeadToSpace/UnrealExample/Variant_Platforming",
+			"HeadToSpace/UnrealExample/Variant_Combat",
+			"HeadToSpace/UnrealExample/Variant_Combat/AI",
+			"HeadToSpace/UnrealExample/Variant_SideScrolling",
+			"HeadToSpace/UnrealExample/Variant_SideScrolling/Gameplay",
+			"HeadToSpace/UnrealExample/Variant_SideScrolling/AI"
 		});
 
 		// Uncomment if you are using Slate UI

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "HeadToSpacePlayerController.generated.h"
+#include "H2SPlayerController.generated.h"
 
 class UInputMappingContext;
 
@@ -13,7 +13,7 @@ class UInputMappingContext;
  *  Manages input mappings
  */
 UCLASS(abstract)
-class AHeadToSpacePlayerController : public APlayerController
+class AH2SPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
