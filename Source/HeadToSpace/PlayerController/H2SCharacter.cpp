@@ -3,6 +3,7 @@
 #include "PlayerController/H2SCharacter.h"
 
 #include "EnhancedInputComponent.h"
+#include "H2SHandController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -22,7 +23,6 @@ AH2SCharacter::AH2SCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
-
 }
 
 // Called when the game starts or when spawned

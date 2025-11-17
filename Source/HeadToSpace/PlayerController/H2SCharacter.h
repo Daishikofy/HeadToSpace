@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "H2SCharacter.generated.h"
 
+class UH2SHandController;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
@@ -27,7 +28,6 @@ class HEADTOSPACE_API AH2SCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AH2SCharacter();
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
