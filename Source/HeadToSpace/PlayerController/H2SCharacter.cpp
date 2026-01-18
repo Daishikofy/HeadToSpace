@@ -6,7 +6,7 @@
 #include "H2SHandController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-
+DEFINE_LOG_CATEGORY(H2SCharacter);
 // Sets default values
 AH2SCharacter::AH2SCharacter()
 {
@@ -23,6 +23,11 @@ AH2SCharacter::AH2SCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	// Create the hands
+	
+	RightHandController = CreateDefaultSubobject<UH2SHandController>(TEXT("RightHandController"));
+	LeftHandController = CreateDefaultSubobject<UH2SHandController>(TEXT("LeftHandController"));
 }
 
 // Called when the game starts or when spawned
@@ -32,22 +37,44 @@ void AH2SCharacter::BeginPlay()
 	
 }
 
-void AH2SCharacter::MoveLeft(const FInputActionValue& Value)
+void AH2SCharacter::Move(const FInputActionValue& Value)
 {
-	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	// route the input
-	DoMoveLeft(MovementVector.X, MovementVector.Y);
+	DoMove(MovementVector.X, MovementVector.Y);
 }
 
-void AH2SCharacter::MoveRight(const FInputActionValue& Value)
+void AH2SCharacter::MoveLeftHand(const FInputActionValue& Value)
+{
+	// input is a Vector2D
+	FVector2D MovementVector = Value.Get<FVector2D>();
+	
+	DoMoveHandTrigger(LeftHandController, MovementVector.X, MovementVector.Y);
+}
+
+void AH2SCharacter::LeftHandHold(const FInputActionValue& Value)
+{
+	bool bIsHolding = Value.Get<bool>();
+	UE_LOG(H2SCharacter, Log, TEXT("Left Hand hold"));
+	
+	DoHandHold(LeftHandController, bIsHolding);
+}
+
+void AH2SCharacter::MoveRightHand(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	// route the input
-	DoMoveRight(MovementVector.X, MovementVector.Y);
+	DoMoveHandTrigger(RightHandController, MovementVector.X, MovementVector.Y);
+}
+
+void AH2SCharacter::RightHandHold(const FInputActionValue& Value)
+{
+	bool bIsHolding = Value.Get<bool>();
+	UE_LOG(H2SCharacter, Log, TEXT("Right Hand hold"));
+	
+	DoHandHold(RightHandController, bIsHolding);
 }
 
 // Called every frame
@@ -66,8 +93,64 @@ void AH2SCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		// Moving
-		EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveLeft);
-		EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveRight);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AH2SCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveLeftHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveLeftHand);
+		EnhancedInputComponent->BindAction(MoveRightHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveRightHand);
+		EnhancedInputComponent->BindAction(HoldLeftHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::LeftHandHold);
+		EnhancedInputComponent->BindAction(HoldRightHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::RightHandHold);
 	}
 }
 
+void AH2SCharacter::DoMove(float Right, float Forward)
+{
+	if (GetController() != nullptr)
+	{
+		//disable movement inputs if we're climbing
+		if (!bIsClimbing)
+		{
+			// find out which way is forward
+			const FRotator Rotation = GetController()->GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			// get forward vector
+			const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+			// get right vector 
+			const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+			// add movement 
+			AddMovementInput(ForwardDirection, Forward);
+			AddMovementInput(RightDirection, Right);
+		}
+	}
+}
+
+void AH2SCharacter::DoLook(float Yaw, float Pitch)
+{
+	if (GetController() != nullptr)
+	{
+		// add yaw and pitch input to controller
+		AddControllerYawInput(Yaw);
+		AddControllerPitchInput(Pitch);
+	}
+}
+
+void AH2SCharacter::DoMoveHandTrigger(UH2SHandController* Hand, float HorizontalAxis, float VerticalAxis)
+{
+	if (Hand)
+	{
+		Hand->MoveTrigger(FVector{0, HorizontalAxis, VerticalAxis});
+	}
+}
+
+void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsHandActivated)
+{
+	UE_LOG(H2SCharacter, Log, TEXT("Hand hold"));
+	if (Hand)
+	{
+		if (Hand->TryHandHold(bIsHandActivated))
+		{
+			DrawDebugSphere(GetWorld(), Hand->HandTrigger->GetComponentLocation(), 20, 30, FColor::Yellow, false, 10);
+		}
+	}
+}

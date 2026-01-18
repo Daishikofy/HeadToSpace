@@ -13,10 +13,19 @@ UH2SHandController::UH2SHandController()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
+void UH2SHandController::SetupComponent(UStaticMeshComponent* Trigger, UStaticMeshComponent* Mesh)
+{
+	HandTrigger = Trigger;
+	HandMesh = Mesh;
+
+	HandTrigger->OnComponentBeginOverlap.AddDynamic(this, &UH2SHandController::OnTriggerBeginOverlap);
+	HandTrigger->OnComponentEndOverlap.AddDynamic(this, &UH2SHandController::OnTriggerEndOverlap);
+}
 
 void UH2SHandController::MoveTrigger(const FVector& Direction)
 {
-	if (HandTrigger == nullptr)
+	if (HandTrigger == nullptr ||
+		CurrentSelectedHold != nullptr)
 	{
 		return;
 	}
@@ -28,26 +37,44 @@ void UH2SHandController::MoveTrigger(const FVector& Direction)
 	}
 }
 
-// Called when the game starts
-void UH2SHandController::BeginPlay()
+bool UH2SHandController::TryHandHold(bool bIsHandActivated)
 {
-	Super::BeginPlay();
+	if (bIsHandActivated)
+	{
+		if (CurrentHoveredHold)
+		{
+			CurrentSelectedHold = CurrentHoveredHold;
+			return true;
+		}
+	}
+	else
+	{
+		CurrentSelectedHold = nullptr;
+	}
 
-	// ...
-	
+	return false;
 }
 
-
-// Called every frame
-void UH2SHandController::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UH2SHandController::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	CurrentHoveredHold = OtherActor;
+	MoveHand();
 }
 
-void UH2SHandController::SetupComponent(UStaticMeshComponent* Trigger)
+void UH2SHandController::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex)
 {
-	this->HandTrigger = Trigger;
+	if (CurrentHoveredHold == OtherActor)
+	{
+		CurrentHoveredHold = nullptr;
+	}
 }
 
+void UH2SHandController::MoveHand()
+{
+	if (CurrentHoveredHold != nullptr)
+	{
+		OnHandMove(CurrentHoveredHold->GetActorLocation());
+	}
+}

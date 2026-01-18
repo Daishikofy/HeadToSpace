@@ -3,12 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
 #include "H2SHandController.generated.h"
 
-
 class USphereComponent;
-
 UCLASS(ClassGroup=(HandController), meta=(BlueprintSpawnableComponent), DefaultToInstanced)
 class HEADTOSPACE_API UH2SHandController : public UActorComponent
 {
@@ -17,30 +14,51 @@ class HEADTOSPACE_API UH2SHandController : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UH2SHandController();
-	
+
+//Hand Controller 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setup")
 	UStaticMeshComponent* HandMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setup")
-	UStaticMeshComponent* HandTrigger;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
 	FVector MovementCenter;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
 	float MaxRadius = 100.0;
+
+	UFUNCTION(BlueprintCallable, Category="Hand")
+	void SetupComponent(UStaticMeshComponent* Trigger, UStaticMeshComponent* Mesh);
 	
-	UFUNCTION(BlueprintCallable)
 	void MoveTrigger(const FVector& Direction);
+	bool TryHandHold(bool bIsHandActivated);
+
+	//Blueprint implementables for visual feedback
+	UFUNCTION(BlueprintImplementableEvent, Category="HandController")
+	void OnHandMove(FVector HoldPosition);
+	UFUNCTION(BlueprintImplementableEvent, Category="HandController")
+	void OnHandHold();
+	UFUNCTION(BlueprintImplementableEvent, Category="HandController")
+	void OnHandRelease();
 	
 protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+	UPROPERTY()
+	AActor* CurrentSelectedHold;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+#pragma region //{Hand related functions and Properties}
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setup")
+	UStaticMeshComponent* HandTrigger;
+	
+protected:
+	UPROPERTY()
+	AActor* CurrentHoveredHold;
+	
+	UFUNCTION()
+	void OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	UFUNCTION(BlueprintCallable)
-	void SetupComponent(UStaticMeshComponent* Trigger);
+private:
+	void MoveHand();
+#pragma endregion
+
 };
