@@ -96,7 +96,10 @@ void AH2SCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AH2SCharacter::Move);
 		EnhancedInputComponent->BindAction(MoveLeftHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveLeftHand);
 		EnhancedInputComponent->BindAction(MoveRightHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveRightHand);
+		
+		EnhancedInputComponent->BindAction(HoldLeftHandAction, ETriggerEvent::Started, this, &AH2SCharacter::LeftHandHold);
 		EnhancedInputComponent->BindAction(HoldLeftHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::LeftHandHold);
+		EnhancedInputComponent->BindAction(HoldRightHandAction, ETriggerEvent::Started, this, &AH2SCharacter::RightHandHold);
 		EnhancedInputComponent->BindAction(HoldRightHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::RightHandHold);
 	}
 }
@@ -145,7 +148,15 @@ void AH2SCharacter::DoMoveHandTrigger(UH2SHandController* Hand, float Horizontal
 
 void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsHandActivated)
 {
-	UE_LOG(H2SCharacter, Log, TEXT("Hand hold"));
+	if (bIsHandActivated)
+	{
+		UE_LOG(H2SCharacter, Log, TEXT("Hand hold"));
+	}
+	else
+	{
+		UE_LOG(H2SCharacter, Log, TEXT("Hand release"));
+	}
+	
 	if (Hand)
 	{
 		if (Hand->TryHandHold(bIsHandActivated))
