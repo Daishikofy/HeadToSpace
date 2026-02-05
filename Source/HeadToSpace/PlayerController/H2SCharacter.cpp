@@ -4,7 +4,10 @@
 
 #include "EnhancedInputComponent.h"
 #include "H2SHandController.h"
+#include "H2SPlayerController.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 DEFINE_LOG_CATEGORY(H2SCharacter);
 // Sets default values
@@ -56,7 +59,7 @@ void AH2SCharacter::MoveLeftHand(const FInputActionValue& Value)
 void AH2SCharacter::LeftHandHold(const FInputActionValue& Value)
 {
 	bool bIsHolding = Value.Get<bool>();
-	UE_LOG(H2SCharacter, Log, TEXT("Left Hand hold"));
+	UE_LOG(H2SCharacter, Log, TEXT("Left Hand hold pressed"));
 	
 	DoHandHold(LeftHandController, bIsHolding);
 }
@@ -72,9 +75,14 @@ void AH2SCharacter::MoveRightHand(const FInputActionValue& Value)
 void AH2SCharacter::RightHandHold(const FInputActionValue& Value)
 {
 	bool bIsHolding = Value.Get<bool>();
-	UE_LOG(H2SCharacter, Log, TEXT("Right Hand hold"));
+	UE_LOG(H2SCharacter, Log, TEXT("Right Hand hold pressed"));
 	
 	DoHandHold(RightHandController, bIsHolding);
+}
+
+void AH2SCharacter::ChangeContext(const FInputActionValue& Value)
+{
+	Cast<AH2SPlayerController>(GetController())->SwapGameplayMappingContext();
 }
 
 // Called every frame
@@ -101,6 +109,8 @@ void AH2SCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(HoldLeftHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::LeftHandHold);
 		EnhancedInputComponent->BindAction(HoldRightHandAction, ETriggerEvent::Started, this, &AH2SCharacter::RightHandHold);
 		EnhancedInputComponent->BindAction(HoldRightHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::RightHandHold);
+
+		EnhancedInputComponent->BindAction(ChangeContextAction, ETriggerEvent::Triggered, this, &AH2SCharacter::ChangeContext);
 	}
 }
 
@@ -148,20 +158,11 @@ void AH2SCharacter::DoMoveHandTrigger(UH2SHandController* Hand, float Horizontal
 
 void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsHandActivated)
 {
-	if (bIsHandActivated)
-	{
-		UE_LOG(H2SCharacter, Log, TEXT("Hand hold"));
-	}
-	else
-	{
-		UE_LOG(H2SCharacter, Log, TEXT("Hand release"));
-	}
-	
 	if (Hand)
 	{
 		if (Hand->TryHandHold(bIsHandActivated))
 		{
-			DrawDebugSphere(GetWorld(), Hand->HandTrigger->GetComponentLocation(), 20, 30, FColor::Yellow, false, 10);
+			DrawDebugSphere(GetWorld(), Hand->GetHandHoldActor()->GetActorLocation(), 20, 30, FColor::Yellow, false, 10);
 		}
 	}
 }

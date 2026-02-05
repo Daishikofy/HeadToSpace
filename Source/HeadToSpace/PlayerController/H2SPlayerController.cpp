@@ -6,6 +6,24 @@
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 
+void AH2SPlayerController::SwapGameplayMappingContext() 
+{
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		if (bIsClimbing)
+		{
+			Subsystem->AddMappingContext(GroundMappingContext, 0);
+			Subsystem->RemoveMappingContext(ClimbingMappingContext);
+		}
+		else
+		{
+			Subsystem->AddMappingContext(ClimbingMappingContext , 0);
+			Subsystem->RemoveMappingContext(GroundMappingContext);
+		}
+		bIsClimbing = !bIsClimbing;
+	}
+}
+
 void AH2SPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -17,5 +35,7 @@ void AH2SPlayerController::SetupInputComponent()
 		{
 			Subsystem->AddMappingContext(CurrentContext, 0);
 		}
+
+		Subsystem->AddMappingContext(GroundMappingContext, 0);
 	}
 }

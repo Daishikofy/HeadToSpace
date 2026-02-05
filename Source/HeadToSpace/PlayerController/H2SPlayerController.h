@@ -16,14 +16,25 @@ UCLASS(abstract)
 class AH2SPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+public:
+	void SwapGameplayMappingContext();
 	
 protected:
 
 	/** Input Mapping Contexts */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input", meta = (AllowPrivateAccess = "true"))
 	TArray<UInputMappingContext*> DefaultMappingContexts;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input", meta = (AllowPrivateAccess = "true"))
+	UInputMappingContext* ClimbingMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input", meta = (AllowPrivateAccess = "true"))
+	UInputMappingContext* GroundMappingContext;
 
 	/** Input mapping context setup */
 	virtual void SetupInputComponent() override;
+
+private:
+	bool bIsClimbing = false;
 
 };

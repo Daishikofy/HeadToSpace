@@ -38,8 +38,6 @@ public:
 	// Sets default values for this character's properties
 	AH2SCharacter();
 protected:
-	/**Character state**/
-	bool bIsClimbing = false;
 	
 	/**Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
@@ -52,6 +50,42 @@ protected:
 	UInputAction* MoveRightHandAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	UInputAction* HoldRightHandAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	UInputAction* ChangeContextAction;
+	
+	/**Movement**/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float ArmReachRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float HandSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float HandDetectionRadius;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float BodySpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float LeftBodyOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float RightBodyOffset;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float HorizontalToShoulderMinAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float HorizontalToShoulderMaxAngle;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float MinWallDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	float MaxWallDistance;
+	
+	/**Physics**/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement Physics")
+	float MaxFallSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement Physics")
+	float GravityAppliedToPlayer;
+	
+	/**Character state**/
+	bool bIsClimbing = false;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -62,6 +96,7 @@ protected:
 	void LeftHandHold(const FInputActionValue& Value);
 	void MoveRightHand(const FInputActionValue& Value);
 	void RightHandHold(const FInputActionValue& Value);
+	void ChangeContext(const FInputActionValue& Value);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -72,14 +107,4 @@ public:
 	void DoLook(float Yaw, float Pitch);
 	void DoMoveHandTrigger(UH2SHandController* Hand, float HorizontalAxis, float VerticalAxis);
 	void DoHandHold(UH2SHandController* Hand, bool bIsHandActivated);
-
-	/** Handles move inputs from either controls or UI interfaces */
-// 	UFUNCTION(BlueprintImplementableEvent, Category="Input")
-// 	void DoMoveLeftEvent(float HorizontalAxis, float VerticalAxis);
-// 	UFUNCTION(BlueprintImplementableEvent, Category="Input")
-// 	void DoLeftHandHoldEvent(bool bIsHolding);
-// 	UFUNCTION(BlueprintImplementableEvent, Category="Input")
-// 	void DoMoveRightEvent(float HorizontalAxis, float VerticalAxis);
-// 	UFUNCTION(BlueprintImplementableEvent, Category="Input")
-// 	void DoRightHandHoldEvent(bool bIsHolding);
 };

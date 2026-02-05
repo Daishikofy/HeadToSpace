@@ -6,6 +6,31 @@
 #include "H2SHandController.generated.h"
 
 class USphereComponent;
+
+USTRUCT(BlueprintType)
+struct FH2SHandControllerData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UStaticMeshComponent* Trigger;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UStaticMeshComponent* Mesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector ShoulderLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ArmReachRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HandSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HandDetectionRadius;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HorizontalToShoulderMinAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HorizontalToShoulderMaxAngle;
+};
+
 UCLASS(ClassGroup=(HandController), meta=(BlueprintSpawnableComponent), DefaultToInstanced)
 class HEADTOSPACE_API UH2SHandController : public UActorComponent
 {
@@ -15,21 +40,17 @@ public:
 	// Sets default values for this component's properties
 	UH2SHandController();
 
-//Hand Controller 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setup")
-	UStaticMeshComponent* HandMesh;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
-	FVector MovementCenter;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
-	float MaxRadius = 100.0;
-
 	UFUNCTION(BlueprintCallable, Category="Hand")
-	void SetupComponent(UStaticMeshComponent* Trigger, UStaticMeshComponent* Mesh);
+	void SetupComponent(FH2SHandControllerData InHandControllerData);
+	
+//Hand Controller
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FH2SHandControllerData HandControllerData;
 	
 	void MoveTrigger(const FVector& Direction);
 	bool TryHandHold(bool bIsHandActivated);
+	
+	AActor* GetHandHoldActor();
 
 	//Blueprint implementables for visual feedback
 	UFUNCTION(BlueprintImplementableEvent, Category="HandController")
@@ -44,10 +65,6 @@ protected:
 	AActor* CurrentSelectedHold;
 
 #pragma region //{Hand related functions and Properties}
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setup")
-	UStaticMeshComponent* HandTrigger;
-	
 protected:
 	UPROPERTY()
 	AActor* CurrentHoveredHold;

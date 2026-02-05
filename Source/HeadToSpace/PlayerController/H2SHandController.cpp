@@ -13,27 +13,26 @@ UH2SHandController::UH2SHandController()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UH2SHandController::SetupComponent(UStaticMeshComponent* Trigger, UStaticMeshComponent* Mesh)
+void UH2SHandController::SetupComponent(FH2SHandControllerData InHandControllerData)
 {
-	HandTrigger = Trigger;
-	HandMesh = Mesh;
+	HandControllerData = InHandControllerData;
 
-	HandTrigger->OnComponentBeginOverlap.AddDynamic(this, &UH2SHandController::OnTriggerBeginOverlap);
-	HandTrigger->OnComponentEndOverlap.AddDynamic(this, &UH2SHandController::OnTriggerEndOverlap);
+	HandControllerData.Trigger->OnComponentBeginOverlap.AddDynamic(this, &UH2SHandController::OnTriggerBeginOverlap);
+	HandControllerData.Trigger->OnComponentEndOverlap.AddDynamic(this, &UH2SHandController::OnTriggerEndOverlap);
 }
 
 void UH2SHandController::MoveTrigger(const FVector& Direction)
 {
-	if (HandTrigger == nullptr ||
+	if (HandControllerData.Trigger == nullptr ||
 		CurrentSelectedHold != nullptr)
 	{
 		return;
 	}
-	
-	UE::Math::TVector<double> FutureLocation = HandTrigger->GetRelativeLocation() + Direction;
-	if (FVector::Distance(MovementCenter, FutureLocation) <= MaxRadius)
+
+	UE::Math::TVector<double> FutureLocation = HandControllerData.Trigger->GetRelativeLocation() + Direction;
+	if (FVector::Distance(HandControllerData.ShoulderLocation, FutureLocation) <= HandControllerData.ArmReachRadius)
 	{
-		HandTrigger->AddLocalOffset(Direction);
+		HandControllerData.Trigger->AddLocalOffset(Direction);
 	}
 }
 
@@ -55,8 +54,13 @@ bool UH2SHandController::TryHandHold(bool bIsHandActivated)
 	return false;
 }
 
+AActor* UH2SHandController::GetHandHoldActor()
+{
+	return CurrentSelectedHold;
+}
+
 void UH2SHandController::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                               int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	CurrentHoveredHold = OtherActor;
 	MoveHand();
