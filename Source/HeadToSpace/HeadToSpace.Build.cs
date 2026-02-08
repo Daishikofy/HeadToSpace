@@ -17,7 +17,8 @@ public class HeadToSpace : ModuleRules
 			"AIModule",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
-			"UMG"
+			"UMG",
+			"ImGui"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
