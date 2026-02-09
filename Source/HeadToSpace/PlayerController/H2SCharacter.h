@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "H2SCharacter.generated.h"
 
+class UH2SPlayerControllerImGui;
 class UH2SHandController;
 class USpringArmComponent;
 class UCameraComponent;
@@ -107,4 +108,6 @@ public:
 	void DoLook(float Yaw, float Pitch);
 	void DoMoveHandTrigger(UH2SHandController* Hand, float HorizontalAxis, float VerticalAxis);
 	void DoHandHold(UH2SHandController* Hand, bool bIsHandActivated);
+
+	friend UH2SPlayerControllerImGui;
 };
