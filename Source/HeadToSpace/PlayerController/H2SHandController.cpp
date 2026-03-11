@@ -46,21 +46,23 @@ void UH2SHandController::PreserveHoldPosition()
 	}
 }
 
-bool UH2SHandController::TrySetHandHold(bool bIsHandHolding)
+bool UH2SHandController::TrySetHandHold()
 {
-	if (bIsHandHolding)
+	if (CurrentSelectedHold == nullptr and CurrentHoveredHold != nullptr)
 	{
-		if (CurrentHoveredHold)
-		{
-			CurrentSelectedHold = CurrentHoveredHold;
-			return true;
-		}
+		CurrentSelectedHold = CurrentHoveredHold;
+		return true;
 	}
-	else
+	return false;
+}
+
+bool UH2SHandController::ReleaseHold()
+{
+	if (CurrentSelectedHold != nullptr)
 	{
 		CurrentSelectedHold = nullptr;
+		return true;
 	}
-
 	return false;
 }
 

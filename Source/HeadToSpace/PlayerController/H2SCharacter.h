@@ -66,7 +66,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	float BodySpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
-	float NeutralBodyOffset;
+	FVector NeutralBodyOffset;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	float HorizontalToShoulderMinAngle;
@@ -103,7 +103,7 @@ public:
 	void DoMove(float Right, float Forward);
 	void DoLook(float Yaw, float Pitch);
 	void DoMoveHandTrigger(UH2SHandController* Hand, const FVector& Direction, float DeltaTime);
-	void DoHandHold(UH2SHandController* Hand, bool bIsHandHolding);
+	void DoHandHold(UH2SHandController* Hand, bool bIsTryingToHold);
 
 private:
 	UPROPERTY()

@@ -47,7 +47,8 @@ public:
 	
 	void MoveTrigger(const FVector& Direction);
 	void PreserveHoldPosition();
-	bool TrySetHandHold(bool bIsHandActivated);
+	bool TrySetHandHold();
+	bool ReleaseHold();
 	
 	AActor* GetHandHoldActor() const { return CurrentSelectedHold;};
 

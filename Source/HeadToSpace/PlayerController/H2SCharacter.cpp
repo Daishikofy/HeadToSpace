@@ -8,6 +8,7 @@
 #include "H2SPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Elements/Framework/TypedElementSorter.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 DEFINE_LOG_CATEGORY(H2SCharacter);
@@ -121,8 +122,10 @@ void AH2SCharacter::Tick(float DeltaTime)
 
 		if (GravityCenterDirection.Length() > 1.f)
 		{
+			GravityCenterDirection.Normalize();
 			AddMovementInput(GetActorUpVector(), GravityCenterDirection.Z);
 			AddMovementInput(GetActorRightVector(), GravityCenterDirection.Y);
+			CustomMovementComponent->ClearAccumulatedForces();
 			UE_LOG(H2SCharacter, Log, TEXT("DoHandHold : Move Body"));
 			
 			LeftHandController->PreserveHoldPosition();
@@ -130,6 +133,7 @@ void AH2SCharacter::Tick(float DeltaTime)
 		}
 		else
 		{
+			CustomMovementComponent->ClearAccumulatedForces();
 			GravityCenterTarget = FVector::ZeroVector;
 		}
 		
@@ -199,28 +203,35 @@ void AH2SCharacter::DoMoveHandTrigger(UH2SHandController* Hand, const FVector& D
 	}
 }
 
-void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsHandHolding)
+void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsTryingToHold)
 {
 	if (Hand)
 	{
-		UE_LOG(H2SCharacter, Log, TEXT("AH2SCharacter::DoHandHold bIsHandHolding: %d"), bIsHandHolding);
-		if (Hand->TrySetHandHold(bIsHandHolding))
+		UE_LOG(H2SCharacter, Log, TEXT("AH2SCharacter::DoHandHold bIsHandHolding: %d"), bIsTryingToHold);
+		if (bIsTryingToHold)
 		{
-			UE_LOG(H2SCharacter, Log, TEXT("Hand STARTS holding"));
-			GravityCenterTarget = ComputeGravityCenterPosition();
-			DrawDebugSphere(GetWorld(), Hand->GetHandHoldActor()->GetActorLocation(), 20, 30, FColor::Yellow, false, 10);
-			DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(),Hand->GetHandHoldActor()->GetActorLocation(), 20, FColor::Blue, false, 10);
+			if (Hand->TrySetHandHold())
+			{
+				UE_LOG(H2SCharacter, Log, TEXT("Hand STARTS holding"));
+				GravityCenterTarget = ComputeGravityCenterPosition();
+			}
 		}
-		else
+		else if (Hand->ReleaseHold())
 		{
 			UE_LOG(H2SCharacter, Log, TEXT("Hand STOPS holding"));
 			//Release this hand, computation should be done each time a release / hold is done
 			if (RightHandController->GetHandHoldActor() == nullptr && LeftHandController->GetHandHoldActor() == nullptr)
 			{
 				//Falling
+				GravityCenterTarget = FVector::ZeroVector;
 				CustomMovementComponent->SetMovementMode(MOVE_Falling);
+				
 				AH2SPlayerController* PlayerController = Cast<AH2SPlayerController>(GetController());
 				PlayerController->SwapGameplayMappingContext();
+			}
+			else
+			{
+				GravityCenterTarget = ComputeGravityCenterPosition();
 			}
 		}
 	}
@@ -230,16 +241,25 @@ FVector AH2SCharacter::ComputeGravityCenterPosition() const
 {
 	AActor* RightHand = RightHandController->GetHandHoldActor();
 	AActor* LeftHand = LeftHandController->GetHandHoldActor();
-
+	FVector NewCenter;
 	if (RightHand != nullptr && LeftHand != nullptr)
 	{
-		return (RightHand->GetActorLocation() + LeftHand->GetActorLocation())/2.0f;
+		NewCenter = (RightHand->GetActorLocation() + LeftHand->GetActorLocation()) / 2.0f;
+	}
+	else if (RightHand != nullptr)
+	{
+		const FVector MirrorY = FVector(1, -1, 1);
+		NewCenter = RightHand->GetActorLocation() + (NeutralBodyOffset * MirrorY);
+	}
+	else
+	{
+		NewCenter = LeftHand->GetActorLocation() + NeutralBodyOffset;
 	}
 	
-	if (RightHand != nullptr)
-	{
-		return RightHand->GetActorLocation() - NeutralBodyOffset;
-	}
-
-	return LeftHand->GetActorLocation() + NeutralBodyOffset;
+	// _ _DEBUG End _ _
+	DrawDebugSphere(GetWorld(), NewCenter, 10, 30, FColor::Yellow, false, 10);
+	DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(),NewCenter, 20, FColor::Blue, false, 10);
+	//_ _ DEBUG Begin _ _
+		
+	return NewCenter;
 }
