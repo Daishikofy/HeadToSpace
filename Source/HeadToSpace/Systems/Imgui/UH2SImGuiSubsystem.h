@@ -10,7 +10,6 @@ class UH2SImGuiSubsystem : public UGameInstanceSubsystem, public FTickableGameOb
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
-	
 
 	// FTickableGameObject implementation Begin
 	virtual UWorld* GetTickableGameObjectWorld() const override { return GetWorld(); }
@@ -20,8 +19,6 @@ public:
 	virtual bool IsTickableWhenPaused() const override { return true; }
 	// FTickableGameObject implementation End
 
-	UFUNCTION(BlueprintCallable)
-	static void ToggleImGuiInput();
 private:
 	UPROPERTY()
 	TArray<UH2SImGuiToolBase*> Tools;

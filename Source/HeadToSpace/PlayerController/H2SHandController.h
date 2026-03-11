@@ -19,16 +19,14 @@ struct FH2SHandControllerData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector ShoulderLocation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float ArmReachRadius;
+	float ArmReachRadius = 100.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float HandSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float HandDetectionRadius;
+	float HandDetectionRadius = 10.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float HorizontalToShoulderMinAngle;
+	float HorizontalToShoulderMinAngle = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float HorizontalToShoulderMaxAngle;
+	float HorizontalToShoulderMaxAngle = 90.f;
 };
 
 UCLASS(ClassGroup=(HandController), meta=(BlueprintSpawnableComponent), DefaultToInstanced)
@@ -40,24 +38,25 @@ public:
 	// Sets default values for this component's properties
 	UH2SHandController();
 
-	UFUNCTION(BlueprintCallable, Category="Hand")
-	void SetupComponent(FH2SHandControllerData InHandControllerData);
+	UFUNCTION(BlueprintCallable, Category="H2S.HandController")
+	void SetupComponent(UStaticMeshComponent* HandTrigger);
 	
 //Hand Controller
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FH2SHandControllerData HandControllerData;
 	
 	void MoveTrigger(const FVector& Direction);
-	bool TryHandHold(bool bIsHandActivated);
+	void PreserveHoldPosition();
+	bool TrySetHandHold(bool bIsHandActivated);
 	
-	AActor* GetHandHoldActor();
+	AActor* GetHandHoldActor() const { return CurrentSelectedHold;};
 
 	//Blueprint implementables for visual feedback
-	UFUNCTION(BlueprintImplementableEvent, Category="HandController")
+	UFUNCTION(BlueprintImplementableEvent, Category="H2S.HandController")
 	void OnHandMove(FVector HoldPosition);
-	UFUNCTION(BlueprintImplementableEvent, Category="HandController")
+	UFUNCTION(BlueprintImplementableEvent, Category="H2S.HandController")
 	void OnHandHold();
-	UFUNCTION(BlueprintImplementableEvent, Category="HandController")
+	UFUNCTION(BlueprintImplementableEvent, Category="H2S.HandController")
 	void OnHandRelease();
 	
 protected:

@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "H2SCharacter.generated.h"
 
+class UH2SCharacterMovementComponent;
 class UH2SPlayerControllerImGui;
 class UH2SHandController;
 class USpringArmComponent;
@@ -37,56 +38,51 @@ class HEADTOSPACE_API AH2SCharacter : public ACharacter
 
 public:
 	// Sets default values for this character's properties
-	AH2SCharacter();
+	AH2SCharacter(const FObjectInitializer& ObjectInitializer);
 protected:
 	
 	/**Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Input")
 	UInputAction* MoveAction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Input")
 	UInputAction* MoveLeftHandAction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Input")
 	UInputAction* HoldLeftHandAction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Input")
 	UInputAction* MoveRightHandAction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Input")
 	UInputAction* HoldRightHandAction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Input")
 	UInputAction* ChangeContextAction;
 	
 	/**Movement**/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
-	float ArmReachRadius;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
-	float HandSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
-	float HandDetectionRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
+	float ArmReachRadius = 100.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
+	float HandSpeed = 100.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
+	float HandDetectionRadius = 10.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	float BodySpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
-	float LeftBodyOffset;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
-	float RightBodyOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
+	float NeutralBodyOffset;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	float HorizontalToShoulderMinAngle;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	float HorizontalToShoulderMaxAngle;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	float MinWallDistance;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	float MaxWallDistance;
 	
 	/**Physics**/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement Physics")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement Physics")
 	float MaxFallSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement Physics")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement Physics")
 	float GravityAppliedToPlayer;
-	
-	/**Character state**/
-	bool bIsClimbing = false;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -106,8 +102,21 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	void DoMove(float Right, float Forward);
 	void DoLook(float Yaw, float Pitch);
-	void DoMoveHandTrigger(UH2SHandController* Hand, float HorizontalAxis, float VerticalAxis);
-	void DoHandHold(UH2SHandController* Hand, bool bIsHandActivated);
+	void DoMoveHandTrigger(UH2SHandController* Hand, const FVector& Direction, float DeltaTime);
+	void DoHandHold(UH2SHandController* Hand, bool bIsHandHolding);
 
+private:
+	UPROPERTY()
+	UH2SCharacterMovementComponent* CustomMovementComponent;
+
+	FVector RightHandMoveInput;
+	FVector LeftHandMoveInput;
+
+	FVector GravityCenterTarget;
+
+	FVector ComputeGravityCenterPosition() const;
+	//IMGUI variables
+	bool bIsPressingLeft_DEBUG, bIsPressingRight_DEBUG;
+	
 	friend UH2SPlayerControllerImGui;
 };

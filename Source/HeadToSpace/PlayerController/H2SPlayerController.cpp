@@ -10,7 +10,7 @@ void AH2SPlayerController::SwapGameplayMappingContext()
 {
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
-		if (bIsClimbing)
+		if (bIsInClimbingMode)
 		{
 			Subsystem->AddMappingContext(GroundMappingContext, 0);
 			Subsystem->RemoveMappingContext(ClimbingMappingContext);
@@ -20,7 +20,7 @@ void AH2SPlayerController::SwapGameplayMappingContext()
 			Subsystem->AddMappingContext(ClimbingMappingContext , 0);
 			Subsystem->RemoveMappingContext(GroundMappingContext);
 		}
-		bIsClimbing = !bIsClimbing;
+		bIsInClimbingMode = !bIsInClimbingMode;
 	}
 }
 

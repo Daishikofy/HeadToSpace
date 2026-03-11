@@ -3,6 +3,7 @@
 
 #include "PlayerController/H2SHandController.h"
 
+#include "H2SCharacter.h"
 #include "Components/SphereComponent.h"
 
 // Sets default values for this component's properties
@@ -13,9 +14,9 @@ UH2SHandController::UH2SHandController()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UH2SHandController::SetupComponent(FH2SHandControllerData InHandControllerData)
+void UH2SHandController::SetupComponent(UStaticMeshComponent* HandTrigger)
 {
-	HandControllerData = InHandControllerData;
+	HandControllerData.Trigger = HandTrigger;
 
 	HandControllerData.Trigger->OnComponentBeginOverlap.AddDynamic(this, &UH2SHandController::OnTriggerBeginOverlap);
 	HandControllerData.Trigger->OnComponentEndOverlap.AddDynamic(this, &UH2SHandController::OnTriggerEndOverlap);
@@ -26,6 +27,7 @@ void UH2SHandController::MoveTrigger(const FVector& Direction)
 	if (HandControllerData.Trigger == nullptr ||
 		CurrentSelectedHold != nullptr)
 	{
+		UE_LOG(H2SCharacter, Log, TEXT("HandController Trigger is null or hand is holding"));
 		return;
 	}
 
@@ -36,9 +38,17 @@ void UH2SHandController::MoveTrigger(const FVector& Direction)
 	}
 }
 
-bool UH2SHandController::TryHandHold(bool bIsHandActivated)
+void UH2SHandController::PreserveHoldPosition()
 {
-	if (bIsHandActivated)
+	if (CurrentSelectedHold != nullptr)
+	{
+		HandControllerData.Trigger->SetWorldLocation(GetHandHoldActor()->GetActorLocation());
+	}
+}
+
+bool UH2SHandController::TrySetHandHold(bool bIsHandHolding)
+{
+	if (bIsHandHolding)
 	{
 		if (CurrentHoveredHold)
 		{
@@ -52,11 +62,6 @@ bool UH2SHandController::TryHandHold(bool bIsHandActivated)
 	}
 
 	return false;
-}
-
-AActor* UH2SHandController::GetHandHoldActor()
-{
-	return CurrentSelectedHold;
 }
 
 void UH2SHandController::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,

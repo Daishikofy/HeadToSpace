@@ -18,6 +18,7 @@ class AH2SPlayerController : public APlayerController
 	GENERATED_BODY()
 public:
 	void SwapGameplayMappingContext();
+	bool IsInClimbingMode() const {return bIsInClimbingMode;};
 	
 protected:
 
@@ -35,6 +36,6 @@ protected:
 	virtual void SetupInputComponent() override;
 
 private:
-	bool bIsClimbing = false;
+	bool bIsInClimbingMode = false;
 
 };

@@ -7,8 +7,16 @@
 void UH2SImGuiSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	UH2SPlayerControllerImGui* PlayerController = NewObject<UH2SPlayerControllerImGui>();
-	Tools.Add(PlayerController);
+
+	TArray<UClass*> ToolClasses;
+	GetDerivedClasses(UH2SImGuiToolBase::StaticClass(), ToolClasses);
+	for (UClass* ToolClass : ToolClasses)
+	{
+		if (UH2SImGuiToolBase* ToolInstance = NewObject<UH2SImGuiToolBase>(this, ToolClass))
+		{
+			Tools.Add(ToolInstance);
+		}
+	}
 }
 
 void UH2SImGuiSubsystem::Deinitialize()
@@ -20,11 +28,6 @@ void UH2SImGuiSubsystem::Deinitialize()
 TStatId UH2SImGuiSubsystem::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(UH2SImGuiSubsystem, STATGROUP_Tickables);
-}
-
-void UH2SImGuiSubsystem::ToggleImGuiInput()
-{
-	FImGuiModule::Get().GetProperties().ToggleInput();
 }
 
 void UH2SImGuiSubsystem::Tick(float DeltaTime)

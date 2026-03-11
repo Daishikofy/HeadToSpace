@@ -9,13 +9,13 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract)
 class HEADTOSPACE_API UH2SImGuiToolBase : public UObject
 {
 	GENERATED_BODY()
 public:
-	virtual const FString& GetToolName() const;
-	virtual void DrawTool();
+	virtual const FString& GetToolName() const PURE_VIRTUAL(,return "";);
+	virtual void DrawTool() PURE_VIRTUAL();
 	
 	bool bIsVisible = false;
 protected:
