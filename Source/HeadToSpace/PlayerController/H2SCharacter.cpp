@@ -93,6 +93,8 @@ void AH2SCharacter::ChangeContext(const FInputActionValue& Value)
 	if (PlayerController->IsInClimbingMode())
 	{
 		CustomMovementComponent->SetMovementMode(MOVE_Walking);
+		LeftHandController->ReleaseHold();
+		RightHandController->ReleaseHold();
 	}
 	else
 	{
@@ -119,25 +121,26 @@ void AH2SCharacter::Tick(float DeltaTime)
 		// add movement
 		FVector GravityCenterDirection = GravityCenterTarget - GetActorLocation();
 		GravityCenterDirection.X = 0.0f;
-
-		if (GravityCenterDirection.Length() > 1.f)
+		if (GravityCenterDirection.Length() < 5.f)
 		{
-			GravityCenterDirection.Normalize();
-			AddMovementInput(GetActorUpVector(), GravityCenterDirection.Z);
-			AddMovementInput(GetActorRightVector(), GravityCenterDirection.Y);
-			CustomMovementComponent->ClearAccumulatedForces();
-			UE_LOG(H2SCharacter, Log, TEXT("DoHandHold : Move Body"));
-			
-			LeftHandController->PreserveHoldPosition();
-			RightHandController->PreserveHoldPosition();
+			GravityCenterTarget = FVector::ZeroVector;
 		}
 		else
 		{
-			CustomMovementComponent->ClearAccumulatedForces();
-			GravityCenterTarget = FVector::ZeroVector;
-		}
+			GravityCenterDirection.Normalize();
 		
+			AddMovementInput(GravityCenterDirection, 1.0f);
+			UE_LOG(H2SCharacter, Log, TEXT("DoHandHold : Move Body"));
+		}
+
 	}
+
+	if (CustomMovementComponent->Velocity.Length() > 0.0f)
+	{
+		LeftHandController->PreserveHoldPosition();
+		RightHandController->PreserveHoldPosition();
+	}
+	
 	Super::Tick(DeltaTime);
 }
 
