@@ -84,9 +84,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement Physics")
 	float GravityAppliedToPlayer;
 	
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	
 	/** Called for input */
 	void Move(const FInputActionValue& Value);
 	void MoveLeftHand(const FInputActionValue& Value);
@@ -113,6 +110,7 @@ private:
 	FVector LeftHandMoveInput;
 
 	FVector GravityCenterTarget;
+	FVector GravityCenterMoveDirection;
 
 	FVector ComputeGravityCenterPosition() const;
 	//IMGUI variables

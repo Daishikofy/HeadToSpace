@@ -38,11 +38,70 @@ AH2SCharacter::AH2SCharacter(const FObjectInitializer& ObjectInitializer)
 	CustomMovementComponent = Cast<UH2SCharacterMovementComponent>(GetCharacterMovement());
 }
 
-// Called when the game starts or when spawned
-void AH2SCharacter::BeginPlay()
+// Called to bind functionality to input
+void AH2SCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::BeginPlay();
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	// Set up action bindings
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		// Moving
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AH2SCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveLeftHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveLeftHand);
+		EnhancedInputComponent->BindAction(MoveLeftHandAction, ETriggerEvent::Completed, this, &AH2SCharacter::MoveLeftHand);
+		EnhancedInputComponent->BindAction(MoveRightHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveRightHand);
+		EnhancedInputComponent->BindAction(MoveRightHandAction, ETriggerEvent::Completed, this, &AH2SCharacter::MoveRightHand);
+		
+		EnhancedInputComponent->BindAction(HoldLeftHandAction, ETriggerEvent::Ongoing, this, &AH2SCharacter::LeftHandHold);
+		EnhancedInputComponent->BindAction(HoldLeftHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::LeftHandHold);
+		EnhancedInputComponent->BindAction(HoldRightHandAction, ETriggerEvent::Ongoing, this, &AH2SCharacter::RightHandHold);
+		EnhancedInputComponent->BindAction(HoldRightHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::RightHandHold);
+
+		EnhancedInputComponent->BindAction(ChangeContextAction, ETriggerEvent::Triggered, this, &AH2SCharacter::ChangeContext);
+	}
+}
+
+// Called every frame
+void AH2SCharacter::Tick(float DeltaTime)
+{
+	//If Hand input is not null, move hands
+	if (RightHandMoveInput != FVector::Zero())
+	{
+		DoMoveHandTrigger(RightHandController, RightHandMoveInput, DeltaTime);
+	}
+	if (LeftHandMoveInput != FVector::Zero())
+	{
+		DoMoveHandTrigger(LeftHandController, LeftHandMoveInput, DeltaTime);
+	}
+
+	//If body position must be updated, update body position
+	if (GravityCenterTarget != FVector::ZeroVector)
+	{
+		// add movement
+		FVector GravityCenterDirection = GravityCenterTarget - GetActorLocation();
+		GravityCenterDirection.X = 0.0f;
+		if (GravityCenterDirection.Length() < 5.f)
+		{
+			GravityCenterTarget = FVector::ZeroVector;
+		}
+		else
+		{
+			GravityCenterDirection.Normalize();
+		
+			AddMovementInput(GravityCenterDirection, 1.0f);
+			UE_LOG(H2SCharacter, Log, TEXT("DoHandHold : Move Body"));
+		}
+
+	}
+
+	if (CustomMovementComponent->Velocity.Length() > 0.0f)
+	{
+		LeftHandController->PreserveHoldPosition();
+		RightHandController->PreserveHoldPosition();
+	}
 	
+	Super::Tick(DeltaTime);
 }
 
 void AH2SCharacter::Move(const FInputActionValue& Value)
@@ -102,72 +161,6 @@ void AH2SCharacter::ChangeContext(const FInputActionValue& Value)
 	}
 }
 
-// Called every frame
-void AH2SCharacter::Tick(float DeltaTime)
-{
-	//If Hand input is not null, move hands
-	if (RightHandMoveInput != FVector::Zero())
-	{
-		DoMoveHandTrigger(RightHandController, RightHandMoveInput, DeltaTime);
-	}
-	if (LeftHandMoveInput != FVector::Zero())
-	{
-		DoMoveHandTrigger(LeftHandController, LeftHandMoveInput, DeltaTime);
-	}
-
-	//If body position must be updated, update body position
-	if (GravityCenterTarget != FVector::ZeroVector)
-	{
-		// add movement
-		FVector GravityCenterDirection = GravityCenterTarget - GetActorLocation();
-		GravityCenterDirection.X = 0.0f;
-		if (GravityCenterDirection.Length() < 5.f)
-		{
-			GravityCenterTarget = FVector::ZeroVector;
-		}
-		else
-		{
-			GravityCenterDirection.Normalize();
-		
-			AddMovementInput(GravityCenterDirection, 1.0f);
-			UE_LOG(H2SCharacter, Log, TEXT("DoHandHold : Move Body"));
-		}
-
-	}
-
-	if (CustomMovementComponent->Velocity.Length() > 0.0f)
-	{
-		LeftHandController->PreserveHoldPosition();
-		RightHandController->PreserveHoldPosition();
-	}
-	
-	Super::Tick(DeltaTime);
-}
-
-// Called to bind functionality to input
-void AH2SCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AH2SCharacter::Move);
-		EnhancedInputComponent->BindAction(MoveLeftHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveLeftHand);
-		EnhancedInputComponent->BindAction(MoveLeftHandAction, ETriggerEvent::Completed, this, &AH2SCharacter::MoveLeftHand);
-		EnhancedInputComponent->BindAction(MoveRightHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::MoveRightHand);
-		EnhancedInputComponent->BindAction(MoveRightHandAction, ETriggerEvent::Completed, this, &AH2SCharacter::MoveRightHand);
-		
-		EnhancedInputComponent->BindAction(HoldLeftHandAction, ETriggerEvent::Ongoing, this, &AH2SCharacter::LeftHandHold);
-		EnhancedInputComponent->BindAction(HoldLeftHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::LeftHandHold);
-		EnhancedInputComponent->BindAction(HoldRightHandAction, ETriggerEvent::Ongoing, this, &AH2SCharacter::RightHandHold);
-		EnhancedInputComponent->BindAction(HoldRightHandAction, ETriggerEvent::Triggered, this, &AH2SCharacter::RightHandHold);
-
-		EnhancedInputComponent->BindAction(ChangeContextAction, ETriggerEvent::Triggered, this, &AH2SCharacter::ChangeContext);
-	}
-}
-
 void AH2SCharacter::DoMove(float Right, float Forward)
 {
 	if (GetController() != nullptr)
@@ -217,6 +210,7 @@ void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsTryingToHold)
 			{
 				UE_LOG(H2SCharacter, Log, TEXT("Hand STARTS holding"));
 				GravityCenterTarget = ComputeGravityCenterPosition();
+				GravityCenterMoveDirection = GravityCenterTarget - CustomMovementComponent->GetLocation();
 			}
 		}
 		else if (Hand->ReleaseHold())
@@ -235,6 +229,7 @@ void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsTryingToHold)
 			else
 			{
 				GravityCenterTarget = ComputeGravityCenterPosition();
+				GravityCenterMoveDirection = GravityCenterTarget - CustomMovementComponent->GetLocation();
 			}
 		}
 	}
