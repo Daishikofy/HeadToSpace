@@ -27,7 +27,6 @@ void UH2SHandController::MoveTrigger(const FVector& Direction)
 	if (HandControllerData.Trigger == nullptr ||
 		CurrentSelectedHold != nullptr)
 	{
-		UE_LOG(H2SCharacter, Log, TEXT("HandController Trigger is null or hand is holding"));
 		return;
 	}
 

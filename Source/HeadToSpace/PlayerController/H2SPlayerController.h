@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "H2SPlayerController.generated.h"
 
+class UH2SPlayerControllerImGui;
 class UInputMappingContext;
 
 /**
@@ -37,5 +38,5 @@ protected:
 
 private:
 	bool bIsInClimbingMode = false;
-
+friend UH2SPlayerControllerImGui;
 };
