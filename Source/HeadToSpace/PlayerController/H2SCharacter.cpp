@@ -72,14 +72,30 @@ void AH2SCharacter::Tick(float DeltaTime)
 	{
 		PlayerController->SwapGameplayMappingContext();
 	}
-//_ _ _ If Hand input is not null, move hands
-	if (RightHandMoveInput != FVector::Zero())
+	
+	if (DashLoadingTimer >= 0.0f)
 	{
-		DoMoveHandTrigger(RightHandController, RightHandMoveInput, DeltaTime);
+		float DotProduct = RightHandMoveInput.Dot(LeftHandMoveInput);
+		if (DotProduct > 0.0f)
+		{
+			DashLoadingTimer += DeltaTime;
+		}
+		else
+		{
+			DashLoadingTimer = 0.0f;
+		}
 	}
-	if (LeftHandMoveInput != FVector::Zero())
+	else
 	{
-		DoMoveHandTrigger(LeftHandController, LeftHandMoveInput, DeltaTime);
+//_ _ _ If Hand input is not null, move hands
+		if (RightHandMoveInput != FVector::Zero())
+		{
+			DoMoveHandTrigger(RightHandController, RightHandMoveInput, DeltaTime);
+		}
+		if (LeftHandMoveInput != FVector::Zero())
+		{
+			DoMoveHandTrigger(LeftHandController, LeftHandMoveInput, DeltaTime);
+		}
 	}
 
 //_ _ _ If body position must be updated, update body position
@@ -138,6 +154,7 @@ void AH2SCharacter::MoveLeftHand(const FInputActionValue& Value)
 
 	LeftHandMoveInput.Y = MovementVector.X;
 	LeftHandMoveInput.Z = MovementVector.Y;
+	LeftHandMoveInput.Normalize();
 }
 
 void AH2SCharacter::LeftHandHold(const FInputActionValue& Value)
@@ -155,6 +172,7 @@ void AH2SCharacter::MoveRightHand(const FInputActionValue& Value)
 	
 	RightHandMoveInput.Y = MovementVector.X;
 	RightHandMoveInput.Z = MovementVector.Y;
+	RightHandMoveInput.Normalize();
 }
 
 void AH2SCharacter::RightHandHold(const FInputActionValue& Value)
@@ -231,29 +249,54 @@ void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsTryingToHold)
 				{
 					CustomMovementComponent->SetMovementMode(MOVE_Custom, EH2SMovementMode::H2S_MOVE_Climb);
 				}
-				
+			
 				UE_LOG(H2SCharacter, Log, TEXT("Hand STARTS holding"));
 				GravityCenterTarget = ComputeGravityCenterPosition();
 				CurrentGravityCenterDirection = GravityCenterTarget - CustomMovementComponent->GetLocation();
 				CurrentGravityCenterDirection.X = 0.0f;
+
+				if (DashLoadingTimer == -1.0f && RightHandController->GetHandHoldActor() == LeftHandController->GetHandHoldActor())
+				{
+					DashLoadingTimer = 0.0f;
+				}
 			}
 		}
 		else if (Hand->ReleaseHold())
 		{
 			UE_LOG(H2SCharacter, Log, TEXT("Hand STOPS holding"));
-			//Release this hand, computation should be done each time a release / hold is done
-			if (RightHandController->GetHandHoldActor() == nullptr && LeftHandController->GetHandHoldActor() == nullptr)
+
+			if (DashLoadingTimer > 1.0f)
 			{
-				//Falling
-				ResetBodyMotion();
 				CustomMovementComponent->SetMovementMode(MOVE_Falling);
+				
+				FVector LaunchVector = (RightHandMoveInput + LeftHandMoveInput)*(DashImpulse/-2.0f);
+				LaunchCharacter(LaunchVector, true, true);
+
+				LeftHandController->ReleaseHold();
+				LeftHandController->ResetTriggerPosition();
+				RightHandController->ReleaseHold();
+				RightHandController->ResetTriggerPosition();
+
+				UE_LOG(H2SCharacter, Log, TEXT("ACharacter::LaunchCharacter (%f,%f,%f)"), LaunchVector.X, LaunchVector.Y, LaunchVector.Z);
 			}
 			else
 			{
-				GravityCenterTarget = ComputeGravityCenterPosition();
-				CurrentGravityCenterDirection = GravityCenterTarget - CustomMovementComponent->GetLocation();
-				CurrentGravityCenterDirection.X = 0.0f;
+				//Release this hand, computation should be done each time a release / hold is done
+				if (RightHandController->GetHandHoldActor() == nullptr && LeftHandController->GetHandHoldActor() == nullptr)
+				{
+					//Falling
+					ResetBodyMotion();
+					CustomMovementComponent->SetMovementMode(MOVE_Falling);
+				}
+				else
+				{
+					GravityCenterTarget = ComputeGravityCenterPosition();
+					CurrentGravityCenterDirection = GravityCenterTarget - CustomMovementComponent->GetLocation();
+					CurrentGravityCenterDirection.X = 0.0f;
+				}
 			}
+			
+			DashLoadingTimer = -1.0f;
 		}
 	}
 }

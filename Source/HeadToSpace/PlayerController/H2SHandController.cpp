@@ -17,6 +17,7 @@ UH2SHandController::UH2SHandController()
 void UH2SHandController::SetupComponent(UStaticMeshComponent* HandTrigger)
 {
 	HandControllerData.Trigger = HandTrigger;
+	DefaultTriggerPosition = HandControllerData.Trigger->GetRelativeLocation();
 
 	HandControllerData.Trigger->OnComponentBeginOverlap.AddDynamic(this, &UH2SHandController::OnTriggerBeginOverlap);
 	HandControllerData.Trigger->OnComponentEndOverlap.AddDynamic(this, &UH2SHandController::OnTriggerEndOverlap);
@@ -37,7 +38,12 @@ void UH2SHandController::MoveTrigger(const FVector& Direction)
 	}
 }
 
-void UH2SHandController::PreserveHoldPosition()
+void UH2SHandController::ResetTriggerPosition() const
+{
+	HandControllerData.Trigger->SetRelativeLocation(DefaultTriggerPosition);
+}
+
+void UH2SHandController::PreserveHoldPosition() const 
 {
 	if (CurrentSelectedHold != nullptr)
 	{

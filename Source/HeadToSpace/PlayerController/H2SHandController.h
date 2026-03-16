@@ -46,7 +46,8 @@ public:
 	FH2SHandControllerData HandControllerData;
 	
 	void MoveTrigger(const FVector& Direction);
-	void PreserveHoldPosition();
+	void ResetTriggerPosition() const;
+	void PreserveHoldPosition() const;
 	bool TrySetHandHold();
 	bool ReleaseHold();
 	
@@ -64,6 +65,8 @@ protected:
 	UPROPERTY()
 	AActor* CurrentSelectedHold;
 
+private:
+	FVector DefaultTriggerPosition;
 #pragma region //{Hand related functions and Properties}
 protected:
 	UPROPERTY()

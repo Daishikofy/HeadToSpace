@@ -66,6 +66,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	float BodySpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
+	float DashImpulse = 250.0f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement", meta=(ToolTip="When body moves to target, at which distance can it starts deccelerating to reach the target."))
 	float BodyMovementAcceptanceRadius = 5.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
@@ -118,6 +121,8 @@ private:
 
 	FVector GravityCenterTarget;
 	FVector CurrentGravityCenterDirection;
+	
+	float DashLoadingTimer = -1.0f;
 
 	void ResetBodyMotion();
 	FVector ComputeGravityCenterPosition() const;
