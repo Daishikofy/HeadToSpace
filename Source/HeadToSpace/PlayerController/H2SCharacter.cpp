@@ -7,8 +7,6 @@
 #include "H2SHandController.h"
 #include "H2SPlayerController.h"
 #include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Elements/Framework/TypedElementSorter.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 DEFINE_LOG_CATEGORY(H2SCharacter);
@@ -62,10 +60,19 @@ void AH2SCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 }
 
-// Called every frame
+void AH2SCharacter::BeginPlay()
+{
+	PlayerController = Cast<AH2SPlayerController>(GetController());
+	Super::BeginPlay();
+}
+
 void AH2SCharacter::Tick(float DeltaTime)
 {
-	//If Hand input is not null, move hands
+	if (CustomMovementComponent->MovementMode == MOVE_Walking && PlayerController->IsInClimbingMode())
+	{
+		PlayerController->SwapGameplayMappingContext();
+	}
+//_ _ _ If Hand input is not null, move hands
 	if (RightHandMoveInput != FVector::Zero())
 	{
 		DoMoveHandTrigger(RightHandController, RightHandMoveInput, DeltaTime);
@@ -75,27 +82,40 @@ void AH2SCharacter::Tick(float DeltaTime)
 		DoMoveHandTrigger(LeftHandController, LeftHandMoveInput, DeltaTime);
 	}
 
-	//If body position must be updated, update body position
+//_ _ _ If body position must be updated, update body position
 	if (GravityCenterTarget != FVector::ZeroVector)
 	{
 		// add movement
-		FVector GravityCenterDirection = GravityCenterTarget - GetActorLocation();
-		GravityCenterDirection.X = 0.0f;
-		if (GravityCenterDirection.Length() < 5.f)
+		FVector NewGravityCenterDirection = GravityCenterTarget - GetActorLocation();
+		NewGravityCenterDirection.X = 0.0f;
+		
+		//Check that the new direction has the same sens as the current one
+		float DotProduct = NewGravityCenterDirection.Dot(CurrentGravityCenterDirection);
+
+		if (DotProduct > 0.0f)
 		{
-			GravityCenterTarget = FVector::ZeroVector;
+			if (NewGravityCenterDirection.Length() < BodyMovementAcceptanceRadius)
+			{
+				ResetBodyMotion();
+				UE_LOG(H2SCharacter, Log, TEXT("Tick : BodyMovementAcceptanceRadius, Stop Body"));
+			}
+			else
+			{
+				NewGravityCenterDirection.Normalize();
+		
+				AddMovementInput(NewGravityCenterDirection, 1.0f);
+			}
 		}
 		else
 		{
-			GravityCenterDirection.Normalize();
-		
-			AddMovementInput(GravityCenterDirection, 1.0f);
-			UE_LOG(H2SCharacter, Log, TEXT("DoHandHold : Move Body"));
+			UE_LOG(H2SCharacter, Log, TEXT("Tick : Wrong direction, Stop Body"));
+			CustomMovementComponent->StopMovementImmediately();
+			ResetBodyMotion();
 		}
-
 	}
 
-	if (CustomMovementComponent->Velocity.Length() > 0.0f)
+//_ _ _ If body is moving, update hand position so they stay stable
+	if (PlayerController->IsInClimbingMode() && CustomMovementComponent->Velocity.Length() > 0.0f)
 	{
 		LeftHandController->PreserveHoldPosition();
 		RightHandController->PreserveHoldPosition();
@@ -147,17 +167,17 @@ void AH2SCharacter::RightHandHold(const FInputActionValue& Value)
 
 void AH2SCharacter::ChangeContext(const FInputActionValue& Value)
 {
-	AH2SPlayerController* PlayerController = Cast<AH2SPlayerController>(GetController());
 	PlayerController->SwapGameplayMappingContext();
 	if (PlayerController->IsInClimbingMode())
+	{
+		CustomMovementComponent->SetMovementMode(MOVE_Custom, EH2SMovementMode::H2S_MOVE_Climb);
+	}
+	else
 	{
 		CustomMovementComponent->SetMovementMode(MOVE_Walking);
 		LeftHandController->ReleaseHold();
 		RightHandController->ReleaseHold();
-	}
-	else
-	{
-		CustomMovementComponent->SetMovementMode(MOVE_Custom, EH2SMovementMode::H2S_MOVE_Climb);
+		ResetBodyMotion();
 	}
 }
 
@@ -203,14 +223,19 @@ void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsTryingToHold)
 {
 	if (Hand)
 	{
-		UE_LOG(H2SCharacter, Log, TEXT("AH2SCharacter::DoHandHold bIsHandHolding: %d"), bIsTryingToHold);
 		if (bIsTryingToHold)
 		{
 			if (Hand->TrySetHandHold())
 			{
+				if (CustomMovementComponent->MovementMode == MOVE_Falling)
+				{
+					CustomMovementComponent->SetMovementMode(MOVE_Custom, EH2SMovementMode::H2S_MOVE_Climb);
+				}
+				
 				UE_LOG(H2SCharacter, Log, TEXT("Hand STARTS holding"));
 				GravityCenterTarget = ComputeGravityCenterPosition();
-				GravityCenterMoveDirection = GravityCenterTarget - CustomMovementComponent->GetLocation();
+				CurrentGravityCenterDirection = GravityCenterTarget - CustomMovementComponent->GetLocation();
+				CurrentGravityCenterDirection.X = 0.0f;
 			}
 		}
 		else if (Hand->ReleaseHold())
@@ -220,19 +245,23 @@ void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsTryingToHold)
 			if (RightHandController->GetHandHoldActor() == nullptr && LeftHandController->GetHandHoldActor() == nullptr)
 			{
 				//Falling
-				GravityCenterTarget = FVector::ZeroVector;
+				ResetBodyMotion();
 				CustomMovementComponent->SetMovementMode(MOVE_Falling);
-				
-				AH2SPlayerController* PlayerController = Cast<AH2SPlayerController>(GetController());
-				PlayerController->SwapGameplayMappingContext();
 			}
 			else
 			{
 				GravityCenterTarget = ComputeGravityCenterPosition();
-				GravityCenterMoveDirection = GravityCenterTarget - CustomMovementComponent->GetLocation();
+				CurrentGravityCenterDirection = GravityCenterTarget - CustomMovementComponent->GetLocation();
+				CurrentGravityCenterDirection.X = 0.0f;
 			}
 		}
 	}
+}
+
+void AH2SCharacter::ResetBodyMotion()
+{
+	GravityCenterTarget = FVector::ZeroVector;
+	CurrentGravityCenterDirection = FVector::ZeroVector;
 }
 
 FVector AH2SCharacter::ComputeGravityCenterPosition() const

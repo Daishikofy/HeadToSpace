@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "H2SCharacter.generated.h"
 
+class AH2SPlayerController;
 class UH2SCharacterMovementComponent;
 class UH2SPlayerControllerImGui;
 class UH2SHandController;
@@ -65,6 +66,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	float BodySpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement", meta=(ToolTip="When body moves to target, at which distance can it starts deccelerating to reach the target."))
+	float BodyMovementAcceptanceRadius = 5.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement")
 	FVector NeutralBodyOffset;
 	
@@ -79,10 +82,12 @@ protected:
 	float MaxWallDistance;
 	
 	/**Physics**/
+	/**Commented for now as we might use the movement component one instead**/
+	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement Physics")
 	float MaxFallSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="H2S.Movement Physics")
-	float GravityAppliedToPlayer;
+	float GravityAppliedToPlayer;*/
 	
 	/** Called for input */
 	void Move(const FInputActionValue& Value);
@@ -92,7 +97,7 @@ protected:
 	void RightHandHold(const FInputActionValue& Value);
 	void ChangeContext(const FInputActionValue& Value);
 public:	
-	// Called every frame
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
@@ -105,13 +110,16 @@ public:
 private:
 	UPROPERTY()
 	UH2SCharacterMovementComponent* CustomMovementComponent;
+	UPROPERTY()
+	AH2SPlayerController* PlayerController;
 
 	FVector RightHandMoveInput;
 	FVector LeftHandMoveInput;
 
 	FVector GravityCenterTarget;
-	FVector GravityCenterMoveDirection;
+	FVector CurrentGravityCenterDirection;
 
+	void ResetBodyMotion();
 	FVector ComputeGravityCenterPosition() const;
 	//IMGUI variables
 	bool bIsPressingLeft_DEBUG, bIsPressingRight_DEBUG;
