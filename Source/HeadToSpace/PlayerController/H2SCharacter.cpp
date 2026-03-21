@@ -79,6 +79,12 @@ void AH2SCharacter::Tick(float DeltaTime)
 		if (DotProduct > 0.0f)
 		{
 			DashLoadingTimer += DeltaTime;
+			// _ _DEBUG Start _ _
+			float VecSize = 5.0f + DashImpulse * (DashLoadingTimer < 1.0f ? DashLoadingTimer : 1.0f);
+			FVector LaunchVector = (RightHandMoveInput + LeftHandMoveInput)*(VecSize/-2.0f);
+			FVector NewCenter = GetActorLocation() + LaunchVector;
+			DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(),NewCenter, 20, FColor::Blue, false);
+			// _ _DEBUG End _ _
 		}
 		else
 		{
@@ -265,11 +271,11 @@ void AH2SCharacter::DoHandHold(UH2SHandController* Hand, bool bIsTryingToHold)
 		{
 			UE_LOG(H2SCharacter, Log, TEXT("Hand STOPS holding"));
 
-			if (DashLoadingTimer > 1.0f)
+			if (DashLoadingTimer > 0.0f)
 			{
 				CustomMovementComponent->SetMovementMode(MOVE_Falling);
 				
-				FVector LaunchVector = (RightHandMoveInput + LeftHandMoveInput)*(DashImpulse/-2.0f);
+				FVector LaunchVector = (RightHandMoveInput + LeftHandMoveInput)*(DashImpulse * (DashLoadingTimer < 1.0f ? DashLoadingTimer : 1.0f) / -2.0f);
 				LaunchCharacter(LaunchVector, true, true);
 
 				LeftHandController->ReleaseHold();
@@ -325,11 +331,6 @@ FVector AH2SCharacter::ComputeGravityCenterPosition() const
 	{
 		NewCenter = LeftHand->GetActorLocation() + NeutralBodyOffset;
 	}
-	
-	// _ _DEBUG End _ _
-	DrawDebugSphere(GetWorld(), NewCenter, 10, 30, FColor::Yellow, false, 10);
-	DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(),NewCenter, 20, FColor::Blue, false, 10);
-	//_ _ DEBUG Begin _ _
 		
 	return NewCenter;
 }
